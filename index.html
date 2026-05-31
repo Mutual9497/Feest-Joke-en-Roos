@@ -7,10 +7,13 @@
   <style>
     :root {
       --bg: #111;
+      --panel: #1d1d1d;
       --text: #f7f7f7;
-      --muted: #999;
+      --muted: #aaa;
       --accent: #ffd54f;
+      --danger: #ff7676;
     }
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -22,47 +25,49 @@
       justify-content: center;
     }
     main {
-      width: min(900px, 94vw);
+      width: min(1000px, 94vw);
       padding: 24px;
-      box-sizing: border-box;
       text-align: center;
     }
-    .setup {
+    .panel {
       display: grid;
       gap: 16px;
-      background: #1d1d1d;
+      background: var(--panel);
       border-radius: 20px;
       padding: 24px;
       box-shadow: 0 10px 40px rgba(0,0,0,.35);
     }
-    input, textarea, button {
+    input, button {
       font: inherit;
       border-radius: 12px;
       border: 0;
       padding: 12px 14px;
     }
-    input, textarea {
+    input {
       background: #2a2a2a;
       color: var(--text);
-    }
-    textarea {
-      min-height: 220px;
-      resize: vertical;
-      text-align: left;
     }
     button {
       cursor: pointer;
       background: var(--accent);
       color: #111;
-      font-weight: 700;
+      font-weight: 800;
     }
+    button.secondary { background: #333; color: var(--text); }
     .small {
       color: var(--muted);
-      font-size: 0.95rem;
-      line-height: 1.4;
+      font-size: 0.98rem;
+      line-height: 1.45;
+    }
+    .big {
+      font-size: clamp(2rem, 7vw, 5rem);
+      font-weight: 900;
+      line-height: 1.05;
+      margin: 0;
     }
     .karaoke {
       display: none;
+      width: 100%;
     }
     .current {
       font-size: clamp(2.3rem, 8vw, 5.8rem);
@@ -84,23 +89,39 @@
       bottom: 16px;
       left: 16px;
       right: 16px;
-      display: flex;
+      display: none;
       gap: 10px;
       justify-content: center;
-      opacity: .92;
+      opacity: .94;
+      flex-wrap: wrap;
     }
-    .controls button {
-      min-width: 110px;
+    .controls button { min-width: 110px; }
+    .qr {
+      width: min(260px, 70vw);
+      height: min(260px, 70vw);
+      background: white;
+      border-radius: 12px;
+      padding: 8px;
+      margin: 0 auto;
     }
+    .urlbox {
+      word-break: break-all;
+      background: #2a2a2a;
+      border-radius: 12px;
+      padding: 12px;
+      color: var(--text);
+      font-size: .95rem;
+    }
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
   <main>
-    <section class="setup" id="setup">
-      <h1>Feestkaraoke</h1>
+    <section class="panel" id="hostSetup">
+      <h1>Feestkaraoke — host</h1>
       <p class="small">
-        Kies de karaoke-MP3 en plak de tekst met tijdcodes. Deze versie werkt lokaal op één apparaat.
-        Later maken we hiervan een gedeelde versie voor telefoons met QR-code en host-sync.
+        Gebruik deze modus op jouw apparaat. Kies de MP3, maak een QR-code met starttijd,
+        en laat gasten die QR-code scannen. Alleen dit apparaat speelt muziek af.
       </p>
 
       <label>
@@ -108,57 +129,26 @@
         <input id="audioFile" type="file" accept="audio/mpeg,audio/mp3,audio/*" />
       </label>
 
-      <label>
-        Lyrics met tijdcodes<br />
-        <textarea id="lyricsInput">00:18 Joke en Roos zijn weer eens jarig
-00:22 Wat men wel vieren mag
-00:25 Want zulke vrolijke bejaarden
-00:29 Zie je niet elke dag
+      <button id="makeStartBtn">Maak QR en start over 30 seconden</button>
 
-00:32 Nu meer dan vijftig jaar geleden
-00:36 Kon jullie liefde al niet op
-00:40 Roos stapte in zijn auto
-00:42 En sloeg zo twee keer over de kop
+      <div id="shareBox" class="hidden">
+        <p class="big" id="hostCountdown">30</p>
+        <p class="small">Laat gasten deze QR-code scannen.</p>
+        <img id="qrImg" class="qr" alt="QR-code voor gasten" />
+        <div id="viewerUrl" class="urlbox"></div>
+      </div>
 
-00:45 Oe Roos en Joke
-00:49 Vijfenzeventig
-00:52 Oe Roos en Joke
-00:56 Vijfenzeventig
-
-01:00 En nu zo vele jaren later
-01:04 Is er heel wat opgebouwd
-01:07 Steeds samen bikkelen in Frankrijk
-01:11 Het voelt daar zo vertrouwd
-
-01:14 En met die bodemloze liefde
-01:18 Staan jullie voor een ieder klaar
-01:21 Voor vrienden en familie
-01:23 En natuurlijk Fae, Jasmijn en Saar
-
-01:27 Oe Roos en Joke
-01:31 Vijfenzeventig
-01:34 Oe Roos en Joke
-01:38 Vijfenzeventig
-
-01:56 Wij hopen jullie te ervaren
-01:59 Als jullie altijd zijn geweest
-02:03 Nog vele, vele jaren
-02:05 Maar nu eerst genieten van dit feest
-
-02:09 Oe Roos en Joke
-02:13 Vijfenzeventig
-02:16 Oe Roos en Joke
-02:20 Vijfenzeventig - 'zeventig
-
-02:24 Oe Roos en Joke
-02:27 Vijfenzeventig
-02:30 Oe Roos en Joke
-02:34 Vijfenzeventig</textarea>
-      </label>
-
-      <button id="startBtn">Start karaoke</button>
       <p class="small">
-        Formaat per regel: <strong>mm:ss tekst</strong>, bijvoorbeeld <strong>01:24 Oe Roos en Joke</strong>.
+        Host-link: <strong>?mode=host</strong><br>
+        Gastlink wordt automatisch gemaakt met een exacte starttijd.
+      </p>
+    </section>
+
+    <section class="panel" id="viewerWaiting">
+      <h1>Feestkaraoke</h1>
+      <p class="big" id="viewerCountdown">Even wachten…</p>
+      <p class="small" id="viewerHelp">
+        Deze gastpagina speelt geen muziek af en heeft geen knoppen.
       </p>
     </section>
 
@@ -168,29 +158,44 @@
     </section>
   </main>
 
-  <div class="controls" id="controls" style="display:none">
+  <div class="controls" id="controls">
     <button id="playPauseBtn">Pauze</button>
     <button id="backBtn">-5 sec</button>
     <button id="forwardBtn">+5 sec</button>
+    <button class="secondary" id="restartBtn">Opnieuw</button>
   </div>
 
   <audio id="audio" preload="auto"></audio>
 
   <script>
-    const audioFile = document.getElementById('audioFile');
-    const lyricsInput = document.getElementById('lyricsInput');
-    const startBtn = document.getElementById('startBtn');
-    const setup = document.getElementById('setup');
+    const LYRICS_TEXT = "00:18 Joke en Roos zijn weer eens jarig\n00:22 Wat men wel vieren mag\n00:25 Want zulke vrolijke bejaarden\n00:29 Zie je niet elke dag\n\n00:32 Nu meer dan vijftig jaar geleden\n00:36 Kon jullie liefde al niet op\n00:40 Roos stapte in zijn auto\n00:42 En sloeg zo twee keer over de kop\n\n00:45 Oe Roos en Joke\n00:49 Vijfenzeventig\n00:52 Oe Roos en Joke\n00:56 Vijfenzeventig\n\n01:00 En nu zo vele jaren later\n01:04 Is er heel wat opgebouwd\n01:07 Steeds samen bikkelen in Frankrijk\n01:11 Het voelt daar zo vertrouwd\n\n01:14 En met die bodemloze liefde\n01:18 Staan jullie voor een ieder klaar\n01:21 Voor vrienden en familie\n01:23 En natuurlijk Fae, Jasmijn en Saar\n\n01:27 Oe Roos en Joke\n01:31 Vijfenzeventig\n01:34 Oe Roos en Joke\n01:38 Vijfenzeventig\n\n01:56 Wij hopen jullie te ervaren\n01:59 Als jullie altijd zijn geweest\n02:03 Nog vele, vele jaren\n02:05 Maar nu eerst genieten van dit feest\n\n02:09 Oe Roos en Joke\n02:13 Vijfenzeventig\n02:16 Oe Roos en Joke\n02:20 Vijfenzeventig - 'zeventig\n\n02:24 Oe Roos en Joke\n02:27 Vijfenzeventig\n02:30 Oe Roos en Joke\n02:34 Vijfenzeventig";
+    const params = new URLSearchParams(location.search);
+    const mode = params.get('mode') || 'viewer';
+    const startAtParam = Number(params.get('start') || 0);
+
+    const hostSetup = document.getElementById('hostSetup');
+    const viewerWaiting = document.getElementById('viewerWaiting');
     const karaoke = document.getElementById('karaoke');
     const controls = document.getElementById('controls');
+    const audioFile = document.getElementById('audioFile');
     const audio = document.getElementById('audio');
     const currentLine = document.getElementById('currentLine');
     const nextLine = document.getElementById('nextLine');
+    const makeStartBtn = document.getElementById('makeStartBtn');
+    const shareBox = document.getElementById('shareBox');
+    const hostCountdown = document.getElementById('hostCountdown');
+    const viewerCountdown = document.getElementById('viewerCountdown');
+    const viewerHelp = document.getElementById('viewerHelp');
+    const qrImg = document.getElementById('qrImg');
+    const viewerUrl = document.getElementById('viewerUrl');
     const playPauseBtn = document.getElementById('playPauseBtn');
     const backBtn = document.getElementById('backBtn');
     const forwardBtn = document.getElementById('forwardBtn');
+    const restartBtn = document.getElementById('restartBtn');
 
-    let lyrics = [];
+    let lyrics = parseLyrics(LYRICS_TEXT);
+    let hostStarted = false;
+    let scheduledStartAt = startAtParam;
 
     function parseTime(timeText) {
       const parts = timeText.split(':').map(Number);
@@ -213,58 +218,134 @@
         .sort((a, b) => a.time - b.time);
     }
 
-    function updateLyrics() {
-      const t = audio.currentTime;
-      let index = -1;
+    function showKaraoke() {
+      hostSetup.classList.add('hidden');
+      viewerWaiting.classList.add('hidden');
+      karaoke.style.display = 'block';
+    }
 
+    function lineForTime(t) {
+      let index = -1;
       for (let i = 0; i < lyrics.length; i++) {
         if (lyrics[i].time <= t) index = i;
         else break;
       }
-
-      currentLine.textContent = index >= 0 ? lyrics[index].text : '...';
-      nextLine.textContent = lyrics[index + 1]?.text || '';
-      requestAnimationFrame(updateLyrics);
+      return {
+        current: index >= 0 ? lyrics[index].text : '...',
+        next: lyrics[index + 1]?.text || ''
+      };
     }
 
-    startBtn.addEventListener('click', async () => {
-      if (!audioFile.files[0]) {
-        alert('Kies eerst een MP3-bestand.');
+    function renderLyricsAt(seconds) {
+      const lines = lineForTime(seconds);
+      currentLine.textContent = lines.current;
+      nextLine.textContent = lines.next;
+    }
+
+    function updateHostLyrics() {
+      renderLyricsAt(audio.currentTime);
+      requestAnimationFrame(updateHostLyrics);
+    }
+
+    function updateViewerLyrics() {
+      const now = Date.now();
+      const secondsUntilStart = (scheduledStartAt - now) / 1000;
+
+      if (secondsUntilStart > 0) {
+        viewerCountdown.textContent = Math.ceil(secondsUntilStart);
+        viewerHelp.textContent = 'De tekst start automatisch. Je telefoon speelt geen muziek af.';
+        requestAnimationFrame(updateViewerLyrics);
         return;
       }
 
-      lyrics = parseLyrics(lyricsInput.value);
-      if (lyrics.length === 0) {
-        alert('Plak eerst lyrics met tijdcodes, bijvoorbeeld: 00:05 Eerste regel');
+      showKaraoke();
+      const elapsed = Math.max(0, (now - scheduledStartAt) / 1000);
+      renderLyricsAt(elapsed);
+      requestAnimationFrame(updateViewerLyrics);
+    }
+
+    function makeViewerUrl(startAt) {
+      const url = new URL(location.href);
+      url.searchParams.set('mode', 'viewer');
+      url.searchParams.set('start', String(startAt));
+      return url.toString();
+    }
+
+    function setupHost() {
+      viewerWaiting.classList.add('hidden');
+      hostSetup.classList.remove('hidden');
+
+      makeStartBtn.addEventListener('click', async () => {
+        if (!audioFile.files[0]) {
+          alert('Kies eerst de MP3.');
+          return;
+        }
+
+        audio.src = URL.createObjectURL(audioFile.files[0]);
+        scheduledStartAt = Date.now() + 30000;
+        const url = makeViewerUrl(scheduledStartAt);
+
+        viewerUrl.textContent = url;
+        qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=' + encodeURIComponent(url);
+        shareBox.classList.remove('hidden');
+
+        const countdownTimer = setInterval(() => {
+          const left = Math.ceil((scheduledStartAt - Date.now()) / 1000);
+          hostCountdown.textContent = Math.max(0, left);
+          if (left <= 0) clearInterval(countdownTimer);
+        }, 100);
+
+        const wait = Math.max(0, scheduledStartAt - Date.now());
+        setTimeout(async () => {
+          showKaraoke();
+          controls.style.display = 'flex';
+          hostStarted = true;
+          audio.currentTime = 0;
+          await audio.play();
+          updateHostLyrics();
+        }, wait);
+      });
+
+      playPauseBtn.addEventListener('click', async () => {
+        if (!hostStarted) return;
+        if (audio.paused) {
+          await audio.play();
+          playPauseBtn.textContent = 'Pauze';
+        } else {
+          audio.pause();
+          playPauseBtn.textContent = 'Play';
+        }
+      });
+
+      backBtn.addEventListener('click', () => {
+        if (!hostStarted) return;
+        audio.currentTime = Math.max(0, audio.currentTime - 5);
+      });
+
+      forwardBtn.addEventListener('click', () => {
+        if (!hostStarted) return;
+        audio.currentTime = Math.min(audio.duration || Infinity, audio.currentTime + 5);
+      });
+
+      restartBtn.addEventListener('click', () => location.reload());
+    }
+
+    function setupViewer() {
+      hostSetup.classList.add('hidden');
+      viewerWaiting.classList.remove('hidden');
+      controls.style.display = 'none';
+
+      if (!scheduledStartAt) {
+        viewerCountdown.textContent = 'Scan de QR-code van de host';
+        viewerHelp.textContent = 'Deze link mist nog een starttijd.';
         return;
       }
 
-      audio.src = URL.createObjectURL(audioFile.files[0]);
-      setup.style.display = 'none';
-      karaoke.style.display = 'block';
-      controls.style.display = 'flex';
+      updateViewerLyrics();
+    }
 
-      await audio.play();
-      updateLyrics();
-    });
-
-    playPauseBtn.addEventListener('click', async () => {
-      if (audio.paused) {
-        await audio.play();
-        playPauseBtn.textContent = 'Pauze';
-      } else {
-        audio.pause();
-        playPauseBtn.textContent = 'Play';
-      }
-    });
-
-    backBtn.addEventListener('click', () => {
-      audio.currentTime = Math.max(0, audio.currentTime - 5);
-    });
-
-    forwardBtn.addEventListener('click', () => {
-      audio.currentTime = Math.min(audio.duration || Infinity, audio.currentTime + 5);
-    });
+    if (mode === 'host') setupHost();
+    else setupViewer();
   </script>
 </body>
 </html>
