@@ -148,7 +148,7 @@
       <h1>Feestkaraoke</h1>
       <p class="big" id="viewerCountdown">Even wachten…</p>
       <p class="small" id="viewerHelp">
-        Deze gastpagina speelt geen muziek af en heeft geen knoppen.
+        Deze gastpagina speelt de MP3 alleen gemutet voor timing en heeft geen knoppen.
       </p>
     </section>
 
@@ -179,6 +179,16 @@
     const controls = document.getElementById('controls');
     const audioFile = document.getElementById('audioFile');
     const audio = document.getElementById('audio');
+
+    const AUDIO_URL = './karaoke.mp3';
+
+    if (mode === 'viewer') {
+      audio.src = AUDIO_URL;
+      audio.muted = true;
+      audio.preload = 'auto';
+    } else {
+      audio.preload = 'auto';
+    }
     const currentLine = document.getElementById('currentLine');
     const nextLine = document.getElementById('nextLine');
     const makeStartBtn = document.getElementById('makeStartBtn');
@@ -247,20 +257,30 @@
       requestAnimationFrame(updateHostLyrics);
     }
 
-    function updateViewerLyrics() {
+    async function updateViewerLyrics() {
       const now = Date.now();
       const secondsUntilStart = (scheduledStartAt - now) / 1000;
 
       if (secondsUntilStart > 0) {
         viewerCountdown.textContent = Math.ceil(secondsUntilStart);
-        viewerHelp.textContent = 'De tekst start automatisch. Je telefoon speelt geen muziek af.';
+        viewerHelp.textContent = 'Tik één keer op het scherm om klaar te staan. Je telefoon blijft gemutet.';
         requestAnimationFrame(updateViewerLyrics);
         return;
       }
 
+      if (audio.paused) {
+        try {
+          audio.currentTime = 0;
+          await audio.play();
+        } catch (e) {
+          viewerCountdown.textContent = 'Tik om te starten';
+          viewerHelp.textContent = 'De browser blokkeert starten zonder tik. Tik één keer op het scherm.';
+          return;
+        }
+      }
+
       showKaraoke();
-      const elapsed = Math.max(0, (now - scheduledStartAt) / 1000);
-      renderLyricsAt(elapsed);
+      renderLyricsAt(audio.currentTime);
       requestAnimationFrame(updateViewerLyrics);
     }
 
@@ -343,6 +363,17 @@
 
       updateViewerLyrics();
     }
+
+    document.body.addEventListener('click', async () => {
+      if (mode === 'viewer') {
+        try {
+          await audio.play();
+          audio.pause();
+          audio.currentTime = 0;
+          viewerHelp.textContent = 'Klaar! Wacht op de countdown. Je telefoon speelt geen hoorbare muziek af.';
+        } catch (e) {}
+      }
+    }, { once: true });
 
     if (mode === 'host') setupHost();
     else setupViewer();
